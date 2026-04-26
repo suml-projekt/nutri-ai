@@ -50,7 +50,9 @@ def get_macros(json_data_string):
     return response_data.get("response", "No data"), None
 
 # UI Streamlit
-st.title("Vision + Macro AI")
+st.title("🥗 Nutri-AI")
+st.markdown("""**:rainbow[Your best nutrition AI buddy] - analyze your food ...or maybe your car!? Nutri-AI can do it all!**""")
+
 uploaded_file = st.file_uploader("Upload image", type=["jpg", "png"])
 
 if uploaded_file:
@@ -74,6 +76,7 @@ if uploaded_file:
             if macros_text is not None:
                 # Green success message
                 st.success("Macros calculated successfully!")
+                st.balloons()
                 # Normal text on normal background
                 st.markdown(macros_text)
             else:

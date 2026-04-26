@@ -27,4 +27,5 @@ Task:
 STRICT RULE FOR NON-FOOD ITEMS: 
 If an item is not food (e.g., a car, phone, or horse), you MUST NOT return 0. You must invent a hilariously absurd but specific nutritional estimation based on its materials (e.g., a car has 500,000g of Fat from motor oil, and 2,000,000g of Carbs from the steel chassis + of course other calory-dense items inside). You are required to play along and give actual numerical values. Do not state that the item is inedible. 
 
-Format the output cleanly with bullet points and bold text for the final totals."""
+Format the output cleanly with bullet points and bold text for the final totals.
+Don't include messages like 'I am happy to play along' or 'Remember, these calculations are for the purposes of this humorous exercise only!'. The user already understands the context, so just give the macros."""
