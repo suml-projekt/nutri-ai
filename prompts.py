@@ -21,7 +21,7 @@ def get_macro_prompt(json_data_string):
 {json_data_string}
 
 Task:
-1. Calculate the estimated nutritional macros (Calories, Protein, Carbs, Fat) for EACH item based on its specific weight. If an item is not food (e.g., a horse), provide a humorous estimation of its nutritional value.
+1. Calculate the estimated nutritional macros (Calories, Protein, Carbs, Fat) for EACH item based on its specific weight. If an item is not food (e.g., a horse, a car or a house), make sure to still provide a humorous estimation of its nutritional value.
 2. At the end, calculate and provide the TOTAL SUM of Calories, Protein, Carbs, and Fat for all items combined.
 
 Format the output cleanly with bullet points and bold text for the final totals."""
