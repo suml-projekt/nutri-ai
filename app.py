@@ -14,6 +14,13 @@ from data_helpers import (
 
 OLLAMA_URL = "http://ollama:11434/api/generate"
 
+def display_detected_items(weights_dict):
+    """Takes the parsed JSON dictionary and formats it as a clean Streamlit list."""
+    st.markdown("### 🔍 Detected Subjects")
+    for item_name, weight in weights_dict.items():
+        # .title() capitalizes the first letter of each word (e.g., "hot dog" -> "Hot Dog")
+        st.markdown(f"- **{str(item_name).title()}**: {weight}g")
+
 def analyze_image(image_bytes):
     payload = {
         "model": "llava",
@@ -35,9 +42,12 @@ def get_macros(json_data_string):
     }
     response = requests.post(OLLAMA_URL, json=payload)
     response_data = response.json()
+    
+    # Return a tuple (data, error) to perfectly match Phase 1's logic
     if "error" in response_data:
-        st.error(f"Ollama API Error: {response_data['error']}")
-    return response_data.get("response", "No data")
+        return None, f"Ollama API Error: {response_data['error']}"
+        
+    return response_data.get("response", "No data"), None
 
 # UI Streamlit
 st.title("Vision + Macro AI")
@@ -48,17 +58,27 @@ if uploaded_file:
     st.image(img_bytes)
 
     if st.button("Analyze"):
-        # Phase 1: Pass the VISION_MESSAGES list
+        # Phase 1: Vision
         raw_response = run_with_dynamic_spinner(analyze_image, VISION_MESSAGES, img_bytes)
         parsed_dict, clean_json_str, error_msg = extract_and_parse_json(raw_response)
 
         if parsed_dict is not None:
-            st.success("Detected Subjects & Weights:")
-            st.json(parsed_dict)
+            st.success("Image successfully analyzed!")
+            display_detected_items(parsed_dict)
+            st.divider() 
             
-            # Phase 2: Pass the MACRO_MESSAGES list
-            macros = run_with_dynamic_spinner(get_macros, MACRO_MESSAGES, clean_json_str)
-            st.info(macros)
+            # Phase 2: Macros
+            # Unpack the new tuple we created in get_macros
+            macros_text, macro_error = run_with_dynamic_spinner(get_macros, MACRO_MESSAGES, clean_json_str)
+            
+            if macros_text is not None:
+                # Green success message
+                st.success("Macros calculated successfully!")
+                # Normal text on normal background
+                st.markdown(macros_text)
+            else:
+                # Red error message
+                st.error(macro_error)
             
         else:
             st.error(error_msg)
