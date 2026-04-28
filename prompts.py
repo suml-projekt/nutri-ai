@@ -21,11 +21,25 @@ def get_macro_prompt(json_data_string):
 {json_data_string}
 
 Task:
-1. Calculate the estimated nutritional macros (Calories, Protein, Carbs, Fat) for EACH item based on its specific weight. 
-2. At the end, calculate and provide the TOTAL SUM of Calories, Protein, Carbs, and Fat for all items combined.
+Calculate the estimated nutritional macros (Calories, Protein, Carbs, Fat) for EACH item based on its name and specific weight. 
+
+You MUST return the result strictly as a valid JSON dictionary where the keys are the object names and the values are dictionaries containing the numerical macros. 
+Do NOT include any markdown formatting like ```json. Do NOT include any introductory or concluding text. Return ONLY the raw JSON object. Do NOT calculate the totals.
+
+CRITICAL JSON RULE:
+You MUST do the math yourself. Return ONLY the final computed numbers (e.g., 1075 or 1075.5). Do NOT return mathematical equations or formulas (e.g., 250 * 4.3) inside the JSON values.
 
 STRICT RULE FOR NON-FOOD ITEMS: 
-If an item is not food (e.g., a car, phone, or horse), you MUST NOT return 0. You must invent a hilariously absurd but specific nutritional estimation based on its materials (e.g., a car has 500,000g of Fat from motor oil, and 2,000,000g of Carbs from the steel chassis + of course other calory-dense items inside). You are required to play along and give actual numerical values. Do not state that the item is inedible. 
+If an item is not food (e.g., a car, phone, or horse), you MUST NOT return 0. You must invent a hilariously absurd but specific nutritional estimation based on its materials (e.g., a car has 500,000g of Fat from motor oil). You are required to play along and give actual numerical values.
+The user already understands the context of the items, so there is no need to explain or justify your estimates. Just provide the numbers.
 
-Format the output cleanly with bullet points and bold text for the final totals.
-Don't include messages like 'I am happy to play along' or 'Remember, these calculations are for the purposes of this humorous exercise only!'. The user already understands the context, so just give the macros."""
+Expected JSON format exactly like this:
+{{
+  "chicken": {{"calories": 248, "protein": 46, "carbs": 0, "fat": 5}},
+  "potatoes": {{"calories": 300, "protein": 10, "carbs": 290, "fat": 0}}
+}}
+or:
+{{
+  "honda civic": {{"calories": 1500000, "protein": 0, "carbs": 50000, "fat": 120000}}
+}}
+"""

@@ -76,6 +76,43 @@ def get_macros(json_data_string):
     
     # Return a tuple (data, error) to perfectly match Phase 1's logic
     if "error" in response_data:
-        return None, f"Ollama API Error: {response_data['error']}"
+        st.error(f"Ollama API Error: {response_data['error']}")
+    return response_data.get("response", "{}")
         
     return response_data.get("response", "No data"), None
+
+def display_macros_and_totals(macro_dict):
+    """Displays per-item macros and calculates/displays totals mathematically."""
+    st.markdown("### 🥧 Nutritional Breakdown")
+    
+    total_cals, total_protein, total_carbs, total_fat = 0, 0, 0, 0
+    
+    c0, c1, c2, c3, c4 = st.columns(5)
+    
+    # Iterate through each item, display it, and add to running totals
+    for item, macros in macro_dict.items():
+        cals = macros.get("calories", 0)
+        protein = macros.get("protein", 0)
+        carbs = macros.get("carbs", 0)
+        fat = macros.get("fat", 0)
+        
+        # Mathematical sum
+        total_cals += cals
+        total_protein += protein
+        total_carbs += carbs
+        total_fat += fat
+        
+        c0.metric("", f"{item}")
+        c1.metric("", f"{total_cals} kcal")
+        c2.metric("", f"{total_protein} g")
+        c3.metric("", f"{total_carbs} g")
+        c4.metric("", f"{total_fat} g")
+        
+    st.divider()
+    
+    # Render the calculated totals nicely using Streamlit columns
+    c0.metric("Items", "Total")
+    c1.metric("Calories", f"{total_cals} kcal")
+    c2.metric("Protein", f"{total_protein} g")
+    c3.metric("Carbs", f"{total_carbs} g")
+    c4.metric("Fat", f"{total_fat} g")

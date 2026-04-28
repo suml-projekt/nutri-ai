@@ -2,7 +2,15 @@
 import streamlit as st
 
 from constants import VISION_MESSAGES, MACRO_MESSAGES
-from helpers import run_with_dynamic_spinner, extract_and_parse_json, get_macros, display_detected_items, analyze_image
+
+from helpers import (
+    run_with_dynamic_spinner, 
+    extract_and_parse_json, 
+    get_macros, 
+    display_detected_items, 
+    analyze_image, 
+    display_macros_and_totals
+)
 
 # UI Streamlit
 st.title("🥗 Nutri-AI")
@@ -16,29 +24,32 @@ if uploaded_file:
 
     if st.button("Analyze"):
         # Phase 1: Vision
-        raw_response = run_with_dynamic_spinner(analyze_image, VISION_MESSAGES, img_bytes)
-        parsed_dict, clean_json_str, error_msg = extract_and_parse_json(raw_response)
+        raw_vision_response = run_with_dynamic_spinner(analyze_image, VISION_MESSAGES, img_bytes)
+        parsed_weights_dict, clean_weights_json_str, vision_error = extract_and_parse_json(raw_vision_response)
 
-        if parsed_dict is not None:
+        if parsed_weights_dict is not None:
             st.success("Image successfully analyzed!")
-            display_detected_items(parsed_dict)
+            display_detected_items(parsed_weights_dict)
             st.divider() 
             
             # Phase 2: Macros
-            # Unpack the new tuple we created in get_macros
-            macros_text, macro_error = run_with_dynamic_spinner(get_macros, MACRO_MESSAGES, clean_json_str)
+            raw_macro_response = run_with_dynamic_spinner(get_macros, MACRO_MESSAGES, clean_weights_json_str)
             
-            if macros_text is not None:
-                # Green success message
+            # Pass Phase 2's raw text through the exact same parser!
+            parsed_macros_dict, clean_macros_json_str, macro_error = extract_and_parse_json(raw_macro_response)
+            
+            if parsed_macros_dict is not None:
                 st.success("Macros calculated successfully!")
                 st.balloons()
-                # Normal text on normal background
-                st.markdown(macros_text)
+                
+                # Hand the dictionary off to Python to do the actual math
+                display_macros_and_totals(parsed_macros_dict)
             else:
-                # Red error message
                 st.error(macro_error)
+                st.write("Raw output from AI:")
+                st.write(raw_macro_response)
             
         else:
-            st.error(error_msg)
+            st.error(vision_error)
             st.write("Raw output from AI:")
-            st.write(raw_response)
+            st.write(raw_vision_response)
