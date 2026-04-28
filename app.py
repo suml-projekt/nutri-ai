@@ -15,6 +15,7 @@ from helpers import (
 # UI Streamlit
 st.title("🥗 Nutri-AI")
 st.markdown("""**:rainbow[Your best nutrition AI buddy] - analyze your food ...or maybe your car!? Nutri-AI can do it all!**""")
+st.divider()
 
 uploaded_file = st.file_uploader("Upload image", type=["jpg", "png"])
 
@@ -42,8 +43,8 @@ if uploaded_file:
                 st.success("Macros calculated successfully!")
                 st.balloons()
                 
-                # Hand the dictionary off to Python to do the actual math
-                display_macros_and_totals(parsed_macros_dict)
+                # We now pass BOTH dictionaries so Python can do the correct mathematical scaling 
+                display_macros_and_totals(parsed_weights_dict, parsed_macros_dict)
             else:
                 st.error(macro_error)
                 st.write("Raw output from AI:")

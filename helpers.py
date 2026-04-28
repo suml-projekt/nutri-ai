@@ -1,4 +1,4 @@
-# data_helpers.py
+# helpers.py
 import json
 import random
 import time
@@ -6,6 +6,7 @@ import concurrent.futures
 import streamlit as st
 import requests
 import base64
+import pandas as pd
 
 from constants import OLLAMA_URL
 from prompts import get_vision_prompt, get_macro_prompt
@@ -49,7 +50,7 @@ def display_detected_items(weights_dict):
     """Takes the parsed JSON dictionary and formats it as a clean Streamlit list."""
     st.markdown("### 🔍 Detected Subjects")
     for item_name, weight in weights_dict.items():
-        # .title() capitalizes the first letter of each word (e.g., "hot dog" -> "Hot Dog")
+        # .title() capitalizes the first letter of each word
         st.markdown(f"- **{str(item_name).title()}**: {weight}g")
 
 def analyze_image(image_bytes):
@@ -74,45 +75,67 @@ def get_macros(json_data_string):
     response = requests.post(OLLAMA_URL, json=payload)
     response_data = response.json()
     
-    # Return a tuple (data, error) to perfectly match Phase 1's logic
     if "error" in response_data:
         st.error(f"Ollama API Error: {response_data['error']}")
     return response_data.get("response", "{}")
-        
-    return response_data.get("response", "No data"), None
 
-def display_macros_and_totals(macro_dict):
+def display_macros_and_totals(weights_dict, macro_dict):
     """Displays per-item macros and calculates/displays totals mathematically."""
     st.markdown("### 🥧 Nutritional Breakdown")
     
-    total_cals, total_protein, total_carbs, total_fat = 0, 0, 0, 0
-    
-    c0, c1, c2, c3, c4 = st.columns(5)
-    
-    # Iterate through each item, display it, and add to running totals
-    for item, macros in macro_dict.items():
-        cals = macros.get("calories", 0)
-        protein = macros.get("protein", 0)
-        carbs = macros.get("carbs", 0)
-        fat = macros.get("fat", 0)
+    records = []
+
+    # Calculate actual macros for each item based on its weight and the 100g estimate
+    for item, weight in weights_dict.items():
+        macros_100g = macro_dict.get(item, {})
         
-        # Mathematical sum
-        total_cals += cals
-        total_protein += protein
-        total_carbs += carbs
-        total_fat += fat
+        factor = weight / 100.0
+        cals = macros_100g.get("calories", 0) * factor
+        protein = macros_100g.get("protein", 0) * factor
+        carbs = macros_100g.get("carbs", 0) * factor
+        fat = macros_100g.get("fat", 0) * factor
+
+        records.append({
+            "Item": str(item).title(),
+            "Weight (g)": weight,
+            "Calories": round(cals, 2),
+            "Protein (g)": round(protein, 2),
+            "Carbs (g)": round(carbs, 2),
+            "Fat (g)": round(fat, 2)
+        })
         
-        c0.metric("", f"{item}")
-        c1.metric("", f"{total_cals} kcal")
-        c2.metric("", f"{total_protein} g")
-        c3.metric("", f"{total_carbs} g")
-        c4.metric("", f"{total_fat} g")
-        
-    st.divider()
+    df = pd.DataFrame(records)
     
-    # Render the calculated totals nicely using Streamlit columns
-    c0.metric("Items", "Total")
-    c1.metric("Calories", f"{total_cals} kcal")
-    c2.metric("Protein", f"{total_protein} g")
-    c3.metric("Carbs", f"{total_carbs} g")
-    c4.metric("Fat", f"{total_fat} g")
+    # Display the dataframe directly to the user
+    st.table(df)
+
+    total_cals = df["Calories"].sum()
+    total_protein = df["Protein (g)"].sum()
+    total_carbs = df["Carbs (g)"].sum()
+    total_fat = df["Fat (g)"].sum()
+
+    # Render the calculated totals, making c1 wider via the weights array [2, 1, 1, 1]
+    st.markdown("### Totals:")
+    c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
+    
+    c1.metric("Calories", f"{round(total_cals, 2)} kcal")
+    c2.metric("Protein", f"{round(total_protein, 2)} g")
+    c3.metric("Carbs", f"{round(total_carbs, 2)} g")
+    c4.metric("Fat", f"{round(total_fat, 2)} g")
+
+    # Pivot dataframe so Index = Macros, Columns = Items (required for the stacked bar view)
+    chart_g_df = df.set_index("Item")[["Protein (g)", "Carbs (g)", "Fat (g)"]].T
+    chart_kcal_df = df.set_index("Item")[["Calories"]].T
+
+    st.bar_chart(chart_kcal_df, horizontal=True)  # Calories as a horizontal bar for emphasis
+    st.bar_chart(chart_g_df, horizontal=True)  # Macros as horizontal bars for better readability
+    
+    # CSV Export Button
+    st.markdown("### 💾 Export Data")
+    csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="Download data as CSV",
+        data=csv,
+        file_name='nutrition_data.csv',
+        mime='text/csv',
+    )

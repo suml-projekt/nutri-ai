@@ -21,25 +21,25 @@ def get_macro_prompt(json_data_string):
 {json_data_string}
 
 Task:
-Calculate the estimated nutritional macros (Calories, Protein, Carbs, Fat) for EACH item based on its name and specific weight. 
+Provide the estimated nutritional macros (Calories, Protein, Carbs, Fat) PER 100 GRAMS for EACH item based on its name. 
 
-You MUST return the result strictly as a valid JSON dictionary where the keys are the object names and the values are dictionaries containing the numerical macros. 
-Do NOT include any markdown formatting like ```json. Do NOT include any introductory or concluding text. Return ONLY the raw JSON object. Do NOT calculate the totals.
+You MUST return the result strictly as a valid JSON dictionary where the keys are the object names and the values are dictionaries containing the numerical macros per 100g. 
+Do NOT include any markdown formatting like ```json. Do NOT include any introductory or concluding text. Return ONLY the raw JSON object. Do NOT calculate the totals based on the provided weights. Only provide the per 100g values.
 
 CRITICAL JSON RULE:
-You MUST do the math yourself. Return ONLY the final computed numbers (e.g., 1075 or 1075.5). Do NOT return mathematical equations or formulas (e.g., 250 * 4.3) inside the JSON values.
+Return ONLY the final numerical values per 100g. Do NOT return mathematical equations or formulas inside the JSON values.
 
 STRICT RULE FOR NON-FOOD ITEMS: 
-If an item is not food (e.g., a car, phone, or horse), you MUST NOT return 0. You must invent a hilariously absurd but specific nutritional estimation based on its materials (e.g., a car has 500,000g of Fat from motor oil). You are required to play along and give actual numerical values.
+If an item is not food (e.g., a car, phone, or horse), you MUST NOT return 0. You must invent a hilariously absurd but specific nutritional estimation per 100g based on its materials.
 The user already understands the context of the items, so there is no need to explain or justify your estimates. Just provide the numbers.
 
 Expected JSON format exactly like this:
 {{
-  "chicken": {{"calories": 248, "protein": 46, "carbs": 0, "fat": 5}},
-  "potatoes": {{"calories": 300, "protein": 10, "carbs": 290, "fat": 0}}
+  "chicken": {{"calories": 165, "protein": 31, "carbs": 0, "fat": 3.6}},
+  "potatoes": {{"calories": 77, "protein": 2, "carbs": 17, "fat": 0.1}}
 }}
 or:
 {{
-  "honda civic": {{"calories": 1500000, "protein": 0, "carbs": 50000, "fat": 120000}}
+  "honda civic": {{"calories": 1000, "protein": 0, "carbs": 30, "fat": 80}}
 }}
 """
