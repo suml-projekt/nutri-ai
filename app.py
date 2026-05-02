@@ -24,7 +24,7 @@ if uploaded_file:
     st.image(img_bytes)
 
     if st.button("Analyze"):
-        # Phase 1: Vision
+        # Phase 1: Image analysis:
         raw_vision_response = run_with_dynamic_spinner(analyze_image, VISION_MESSAGES, img_bytes)
         parsed_weights_dict, clean_weights_json_str, vision_error = extract_and_parse_json(raw_vision_response)
 
@@ -33,18 +33,14 @@ if uploaded_file:
             display_detected_items(parsed_weights_dict)
             st.divider() 
             
-            # Phase 2: Macros
+            # Phase 2: Getting macros / 100g + calculation totals for items based on their weights:
             raw_macro_response = run_with_dynamic_spinner(get_macros, MACRO_MESSAGES, clean_weights_json_str)
-            
-            # Pass Phase 2's raw text through the exact same parser!
             parsed_macros_dict, clean_macros_json_str, macro_error = extract_and_parse_json(raw_macro_response)
             
             if parsed_macros_dict is not None:
                 st.success("Macros calculated successfully!")
                 st.balloons()
-                
-                # We now pass BOTH dictionaries so Python can do the correct mathematical scaling 
-                display_macros_and_totals(parsed_weights_dict, parsed_macros_dict)
+                display_macros_and_totals(parsed_weights_dict, parsed_macros_dict)  # Display info in a nice formatted way, including totals and charts
             else:
                 st.error(macro_error)
                 st.write("Raw output from AI:")

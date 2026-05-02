@@ -36,7 +36,7 @@ def extract_and_parse_json(raw_text):
     start_idx = raw_text.find('{')
     end_idx = raw_text.rfind('}') + 1
     
-    if start_idx != -1 and end_idx != -1:
+    if start_idx != -1 and end_idx != -1:       # if response contained a JSON-like structure:
         clean_json_str = raw_text[start_idx:end_idx]
         try:
             parsed_dict = json.loads(clean_json_str)
@@ -50,10 +50,10 @@ def display_detected_items(weights_dict):
     """Takes the parsed JSON dictionary and formats it as a clean Streamlit list."""
     st.markdown("### 🔍 Detected Subjects")
     for item_name, weight in weights_dict.items():
-        # .title() capitalizes the first letter of each word
-        st.markdown(f"- **{str(item_name).title()}**: {weight}g")
+        st.markdown(f"- **{str(item_name).title()}**: {weight}g")   # Add a capitalized item name + its weight for each entry
 
 def analyze_image(image_bytes):
+    """Analyzes the image by sending it to the Ollama API and returns the raw text response."""
     payload = {
         "model": "llava",
         "prompt": get_vision_prompt(),
@@ -67,6 +67,7 @@ def analyze_image(image_bytes):
     return response_data.get("response", "{}")
 
 def get_macros(json_data_string):
+    """Sends the detected items and their weights to the Ollama API to get back estimated macros, then returns the raw text response."""
     payload = {
         "model": "llama3",
         "prompt": get_macro_prompt(json_data_string),
@@ -104,7 +105,7 @@ def display_macros_and_totals(weights_dict, macro_dict):
             "Fat (g)": round(fat, 2)
         })
         
-    df = pd.DataFrame(records)
+    df = pd.DataFrame(records)  # Create a DataFrame from the list of records for better Streamlit integration + data export
     
     # Display the dataframe directly to the user
     st.table(df)
@@ -114,21 +115,21 @@ def display_macros_and_totals(weights_dict, macro_dict):
     total_carbs = df["Carbs (g)"].sum()
     total_fat = df["Fat (g)"].sum()
 
-    # Render the calculated totals, making c1 wider via the weights array [2, 1, 1, 1]
+    # Render the calculated totals
     st.markdown("### Totals:")
-    c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
+    c1, c2, c3, c4 = st.columns([2, 1, 1, 1])   # calories have more horizontal space
     
-    c1.metric("Calories", f"{round(total_cals, 2)} kcal")
-    c2.metric("Protein", f"{round(total_protein, 2)} g")
-    c3.metric("Carbs", f"{round(total_carbs, 2)} g")
-    c4.metric("Fat", f"{round(total_fat, 2)} g")
+    c1.metric("Calories", f"{round(total_cals, 1)} kcal")
+    c2.metric("Protein", f"{round(total_protein, 1)} g")
+    c3.metric("Carbs", f"{round(total_carbs, 1)} g")
+    c4.metric("Fat", f"{round(total_fat, 1)} g")
 
     # Pivot dataframe so Index = Macros, Columns = Items (required for the stacked bar view)
     chart_g_df = df.set_index("Item")[["Protein (g)", "Carbs (g)", "Fat (g)"]].T
     chart_kcal_df = df.set_index("Item")[["Calories"]].T
 
-    st.bar_chart(chart_kcal_df, horizontal=True)  # Calories as a horizontal bar for emphasis
-    st.bar_chart(chart_g_df, horizontal=True)  # Macros as horizontal bars for better readability
+    st.bar_chart(chart_kcal_df, horizontal=True)  # Calories bar chart
+    st.bar_chart(chart_g_df, horizontal=True)  # Macros bar chart
     
     # CSV Export Button
     st.markdown("### 💾 Export Data")

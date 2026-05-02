@@ -10,7 +10,14 @@ VISION_MESSAGES = [
     "Scanning for hidden vegetables...",
     "Determining if it's a hotdog or not a hotdog...",
     "Deploying tiny digital chefs to inspect the plate...",
-    "Estimating gravity's effect on this portion size..."
+    "Estimating gravity's effect on this portion size...",
+    "Debating if that's a shadow or a snack...",
+    "Measuring the pixel-to-protein ratio...",
+    "Sending the image to a digital food critic...",
+    "Trying not to eat the training data...",
+    "Checking if the lighting makes this look high-calorie...",
+    "Pondering the existential meaning of this meal...",
+    "Running the image through a virtual blender..."
 ]
 
 MACRO_MESSAGES = [
@@ -23,5 +30,12 @@ MACRO_MESSAGES = [
     "Doing the math so you don't have to...",
     "Cross-referencing with the database of all known foods...",
     "Dividing by zero... wait, no, just calculating fats...",
-    "Extracting the digital vitamins..."
+    "Extracting the digital vitamins...",
+    "Asking a digital gym bro for macro advice...",
+    "Spinning the Wheel of Nutrition...",
+    "Doing mental gymnastics to calculate the fiber...",
+    "Baking the final mathematical results...",
+    "Measuring the aerodynamic drag of these carbohydrates...",
+    "Translating calories into pure energy...",
+    "Applying the laws of thermodynamics to your plate..."
 ]
