@@ -42,6 +42,78 @@ stages:
             displayName: Install Terraform
 
           - task: AzureCLI@2
+            displayName: Preflight Azure and Terraform auth
+            inputs:
+              azureSubscription: "$(azureServiceConnection)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                set -euo pipefail
+
+                check_var() {
+                  local name="$1"
+                  local value="${!name:-}"
+                  if [ -z "$value" ]; then
+                    echo "MISSING: $name"
+                    return 1
+                  fi
+                  echo "OK: $name is set, length=${#value}"
+                }
+
+                echo "Azure account:"
+                az account show --query "{subscriptionId:id, tenantId:tenantId, name:name, userType:user.type}" -o table
+
+                echo "Azure DevOps service connection variables:"
+                check_var servicePrincipalId
+                check_var tenantId
+                check_var idToken
+                check_var AZURESUBSCRIPTION_SERVICE_CONNECTION_ID
+
+                subscription_id="$(az account show --query id -o tsv)"
+                export ARM_USE_OIDC=true
+                export ARM_USE_AZUREAD=true
+                export ARM_CLIENT_ID="$servicePrincipalId"
+                export ARM_TENANT_ID="$tenantId"
+                export ARM_SUBSCRIPTION_ID="$subscription_id"
+                export ARM_OIDC_TOKEN="$idToken"
+                export ARM_OIDC_AZURE_SERVICE_CONNECTION_ID="$AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
+                export TF_VAR_subscription_id="$subscription_id"
+
+                echo "Terraform ARM environment:"
+                check_var ARM_USE_OIDC
+                check_var ARM_USE_AZUREAD
+                check_var ARM_CLIENT_ID
+                check_var ARM_TENANT_ID
+                check_var ARM_SUBSCRIPTION_ID
+                check_var ARM_OIDC_TOKEN
+                check_var ARM_OIDC_AZURE_SERVICE_CONNECTION_ID
+                check_var TF_VAR_subscription_id
+
+                echo "Terraform backend resources:"
+                az group show --name rg-suml-tfstate --query name -o tsv
+                az storage account show \
+                  --resource-group rg-suml-tfstate \
+                  --name sasumlprojektstudia \
+                  --query "{name:name, location:location}" \
+                  -o table
+
+                container_exists="$(az storage container exists \
+                  --account-name sasumlprojektstudia \
+                  --name tfstate \
+                  --auth-mode login \
+                  --query exists \
+                  -o tsv)"
+
+                if [ "$container_exists" != "true" ]; then
+                  echo "MISSING: storage container tfstate in sasumlprojektstudia"
+                  exit 1
+                fi
+
+                echo "OK: storage container tfstate exists and is accessible with Entra auth"
+                terraform -chdir="$(terraformWorkingDirectory)" version
+
+          - task: AzureCLI@2
             displayName: Terraform init and validate
             inputs:
               azureSubscription: "$(azureServiceConnection)"
@@ -51,12 +123,21 @@ stages:
               inlineScript: |
                 set -euo pipefail
                 cd "$(terraformWorkingDirectory)"
-                export TF_VAR_subscription_id="$(az account show --query id -o tsv)"
+                subscription_id="$(az account show --query id -o tsv)"
+                export ARM_USE_OIDC=true
+                export ARM_USE_AZUREAD=true
+                export ARM_CLIENT_ID="$servicePrincipalId"
+                export ARM_TENANT_ID="$tenantId"
+                export ARM_SUBSCRIPTION_ID="$subscription_id"
+                export ARM_OIDC_TOKEN="$idToken"
+                export ARM_OIDC_AZURE_SERVICE_CONNECTION_ID="$AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
+                export TF_VAR_subscription_id="$subscription_id"
                 terraform init \
                   -backend-config="resource_group_name=rg-suml-tfstate" \
                   -backend-config="storage_account_name=sasumlprojektstudia" \
                   -backend-config="container_name=tfstate" \
                   -backend-config="key=prod.terraform.tfstate" \
+                  -backend-config="use_oidc=true" \
                   -backend-config="use_azuread_auth=true"
                 terraform validate
 
@@ -70,7 +151,15 @@ stages:
               inlineScript: |
                 set -euo pipefail
                 cd "$(terraformWorkingDirectory)"
-                export TF_VAR_subscription_id="$(az account show --query id -o tsv)"
+                subscription_id="$(az account show --query id -o tsv)"
+                export ARM_USE_OIDC=true
+                export ARM_USE_AZUREAD=true
+                export ARM_CLIENT_ID="$servicePrincipalId"
+                export ARM_TENANT_ID="$tenantId"
+                export ARM_SUBSCRIPTION_ID="$subscription_id"
+                export ARM_OIDC_TOKEN="$idToken"
+                export ARM_OIDC_AZURE_SERVICE_CONNECTION_ID="$AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
+                export TF_VAR_subscription_id="$subscription_id"
                 terraform apply -auto-approve -var="deploy_streamlit_app=false"
 
           - task: AzureCLI@2
@@ -95,5 +184,13 @@ stages:
               inlineScript: |
                 set -euo pipefail
                 cd "$(terraformWorkingDirectory)"
-                export TF_VAR_subscription_id="$(az account show --query id -o tsv)"
+                subscription_id="$(az account show --query id -o tsv)"
+                export ARM_USE_OIDC=true
+                export ARM_USE_AZUREAD=true
+                export ARM_CLIENT_ID="$servicePrincipalId"
+                export ARM_TENANT_ID="$tenantId"
+                export ARM_SUBSCRIPTION_ID="$subscription_id"
+                export ARM_OIDC_TOKEN="$idToken"
+                export ARM_OIDC_AZURE_SERVICE_CONNECTION_ID="$AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
+                export TF_VAR_subscription_id="$subscription_id"
                 terraform apply -auto-approve -var="deploy_streamlit_app=true"
