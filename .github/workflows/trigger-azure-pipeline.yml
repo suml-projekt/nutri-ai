@@ -1,22 +1,6 @@
 name: Trigger Azure DevOps Pipeline
 
 on:
-  push:
-    branches:
-      - main
-      - master
-      - git-ci-cd
-    paths:
-      - azure-pipelines.yml
-      - terraform/**
-      - .github/workflows/trigger-azure-pipeline.yml
-      - Dockerfile
-      - requirements.txt
-      - app.py
-      - constants.py
-      - helpers.py
-      - prompts.py
-      - utils.py
   workflow_dispatch:
 
 permissions:

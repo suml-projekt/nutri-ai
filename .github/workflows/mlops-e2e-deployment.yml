@@ -1,10 +1,6 @@
 name: MLOps E2E Deployment
 
 on:
-  push:
-    branches:
-      - main
-      - master
   workflow_dispatch:
 
 permissions:
