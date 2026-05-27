@@ -205,4 +205,11 @@ stages:
                 export ARM_OIDC_AZURE_SERVICE_CONNECTION_ID="$AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
                 export TF_VAR_subscription_id="$subscription_id"
                 export TF_VAR_streamlit_image_tag="$(imageTag)"
+                streamlit_app_id="/subscriptions/$subscription_id/resourceGroups/rg-suml-projekt-studia/providers/Microsoft.App/containerApps/streamlit-app"
+                if az containerapp show --ids "$streamlit_app_id" >/dev/null 2>&1; then
+                  if ! terraform state show 'azurerm_container_app.streamlit[0]' >/dev/null 2>&1; then
+                    echo "Importing existing streamlit-app into Terraform state"
+                    terraform import 'azurerm_container_app.streamlit[0]' "$streamlit_app_id"
+                  fi
+                fi
                 terraform apply -auto-approve -var="deploy_streamlit_app=true"
