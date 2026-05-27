@@ -1,0 +1,11 @@
+.git
+.github
+.terraform
+terraform/.terraform
+terraform/*.tfstate
+terraform/*.tfstate.*
+__pycache__
+*.py[cod]
+.venv
+venv
+.env

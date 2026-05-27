@@ -1,4 +1,7 @@
-OLLAMA_URL = "http://ollama:11434/api/generate"
+import os
+
+OLLAMA_BASE_URL = os.environ.get("LLM_URL", "http://localhost:11434").rstrip("/")
+OLLAMA_URL = f"{OLLAMA_BASE_URL}/api/generate"
 
 VISION_MESSAGES = [
     "Counting the pixels in your lunch...",

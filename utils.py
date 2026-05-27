@@ -3,6 +3,10 @@ import time
 import requests
 import streamlit as st
 
+def get_required_models():
+    models = os.environ.get("REQUIRED_MODELS", "llava:latest,llama3:latest")
+    return [model.strip() for model in models.split(",") if model.strip()]
+
 def initialize_ollama_models():
     if "models_initialized" not in st.session_state:
         st.session_state.models_initialized = False
@@ -25,10 +29,11 @@ def initialize_ollama_models():
 
     try:
         existing_models = [m['name'] for m in res.json().get('models', [])]
-        required_models = ["llava:latest", "llama3:latest"]
+        required_models = get_required_models()
         
         for model in required_models:
-            if model not in existing_models and f"{model}:latest" not in existing_models:
+            model_with_default_tag = model if ":" in model else f"{model}:latest"
+            if model not in existing_models and model_with_default_tag not in existing_models:
                 with st.spinner(f"Initializing: Downloading {model}..."):
                     requests.post(f"{ollama_url}/api/pull", json={"name": model}, timeout=600)
         

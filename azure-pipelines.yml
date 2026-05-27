@@ -1,0 +1,97 @@
+trigger:
+  branches:
+    include:
+      - main
+      - master
+
+pr: none
+
+variables:
+  azureServiceConnection: "azure-connection"
+  acrName: "acrsumlprojektstudia"
+  acrLoginServer: "acrsumlprojektstudia.azurecr.io"
+  imageRepository: "streamlit-app"
+  imageTag: "$(Build.SourceVersion)"
+  terraformVersion: "1.9.8"
+  terraformWorkingDirectory: "$(System.DefaultWorkingDirectory)/terraform"
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_VAR_streamlit_image_tag: "$(Build.SourceVersion)"
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Deploy
+    displayName: Provision and deploy
+    jobs:
+      - job: ProvisionAndDeploy
+        displayName: Terraform, build, push, deploy
+        steps:
+          - checkout: self
+
+          - script: |
+              set -euo pipefail
+              curl -fsSL "https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip" -o terraform.zip
+              unzip -o terraform.zip
+              sudo mv terraform /usr/local/bin/terraform
+              terraform version
+            displayName: Install Terraform
+
+          - task: AzureCLI@2
+            displayName: Terraform init and validate
+            inputs:
+              azureSubscription: "$(azureServiceConnection)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                set -euo pipefail
+                cd "$(terraformWorkingDirectory)"
+                export TF_VAR_subscription_id="$(az account show --query id -o tsv)"
+                terraform init \
+                  -backend-config="resource_group_name=rg-suml-tfstate" \
+                  -backend-config="storage_account_name=sasumlprojektstudia" \
+                  -backend-config="container_name=tfstate" \
+                  -backend-config="key=prod.terraform.tfstate" \
+                  -backend-config="use_azuread_auth=true" \
+                  -backend-config="use_cli=true"
+                terraform validate
+
+          - task: AzureCLI@2
+            displayName: Provision base infrastructure
+            inputs:
+              azureSubscription: "$(azureServiceConnection)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                set -euo pipefail
+                cd "$(terraformWorkingDirectory)"
+                export TF_VAR_subscription_id="$(az account show --query id -o tsv)"
+                terraform apply -auto-approve -var="deploy_streamlit_app=false"
+
+          - task: AzureCLI@2
+            displayName: Build and push Streamlit image
+            inputs:
+              azureSubscription: "$(azureServiceConnection)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                az acr login --name "$(acrName)"
+                docker build -t "$(acrLoginServer)/$(imageRepository):$(imageTag)" "$(System.DefaultWorkingDirectory)"
+                docker push "$(acrLoginServer)/$(imageRepository):$(imageTag)"
+
+          - task: AzureCLI@2
+            displayName: Deploy Streamlit revision
+            inputs:
+              azureSubscription: "$(azureServiceConnection)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                set -euo pipefail
+                cd "$(terraformWorkingDirectory)"
+                export TF_VAR_subscription_id="$(az account show --query id -o tsv)"
+                terraform apply -auto-approve -var="deploy_streamlit_app=true"
