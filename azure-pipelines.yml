@@ -32,6 +32,9 @@ stages:
 
           - script: |
               set -euo pipefail
+              install_dir="$(Agent.TempDirectory)/terraform-install"
+              mkdir -p "$install_dir"
+              cd "$install_dir"
               curl -fsSL "https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip" -o terraform.zip
               unzip -o terraform.zip
               sudo mv terraform /usr/local/bin/terraform
