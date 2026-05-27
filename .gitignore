@@ -2,5 +2,7 @@ venv/
 .idea/
 .venv/
 __pycache__/
+scripts/bootstrap-tfstate.ps1
+scripts/.azure-cli/
 
 .env

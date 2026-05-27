@@ -60,7 +60,7 @@ jobs:
         run: |
           terraform init \
             -backend-config="resource_group_name=rg-suml-tfstate" \
-            -backend-config="storage_account_name=sasumlprojektstudia" \
+            -backend-config="storage_account_name=stsumlnutriai0abuc1" \
             -backend-config="container_name=tfstate" \
             -backend-config="key=prod.terraform.tfstate" \
             -backend-config="use_oidc=true" \
