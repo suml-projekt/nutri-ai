@@ -57,8 +57,7 @@ jobs:
             -backend-config="storage_account_name=sasumlprojektstudia" \
             -backend-config="container_name=tfstate" \
             -backend-config="key=prod.terraform.tfstate" \
-            -backend-config="use_azuread_auth=true" \
-            -backend-config="use_cli=true"
+            -backend-config="use_azuread_auth=true"
 
       - name: Terraform Validate
         working-directory: terraform
