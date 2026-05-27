@@ -64,6 +64,13 @@ stages:
                 echo "Azure account:"
                 az account show --query "{subscriptionId:id, tenantId:tenantId, name:name, userType:user.type}" -o table
 
+                echo "Registering required Azure resource providers:"
+                for provider in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry Microsoft.ManagedIdentity Microsoft.Storage; do
+                  echo "Registering $provider"
+                  az provider register --namespace "$provider" --wait
+                  az provider show --namespace "$provider" --query "{namespace:namespace,state:registrationState}" -o table
+                done
+
                 echo "Azure DevOps service connection variables:"
                 check_var servicePrincipalId
                 check_var tenantId
