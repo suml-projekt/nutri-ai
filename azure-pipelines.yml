@@ -207,9 +207,14 @@ stages:
                 export TF_VAR_streamlit_image_tag="$(imageTag)"
                 streamlit_app_id="/subscriptions/$subscription_id/resourceGroups/rg-suml-projekt-studia/providers/Microsoft.App/containerApps/streamlit-app"
                 if az containerapp show --ids "$streamlit_app_id" >/dev/null 2>&1; then
-                  if ! terraform state show 'azurerm_container_app.streamlit[0]' >/dev/null 2>&1; then
-                    echo "Importing existing streamlit-app into Terraform state"
-                    terraform import 'azurerm_container_app.streamlit[0]' "$streamlit_app_id"
+                  provisioning_state="$(az containerapp show --ids "$streamlit_app_id" --query properties.provisioningState -o tsv)"
+                  if [ "$provisioning_state" = "Failed" ]; then
+                    echo "Deleting failed streamlit-app before Terraform apply"
+                    az containerapp delete --ids "$streamlit_app_id" --yes
+                  elif ! terraform state show 'azurerm_container_app.streamlit[0]' >/dev/null 2>&1; then
+                    echo "Existing streamlit-app is $provisioning_state but is not tracked by Terraform."
+                    echo "Import it manually or delete it before rerunning this pipeline."
+                    exit 1
                   fi
                 fi
                 terraform apply -auto-approve -var="deploy_streamlit_app=true"
