@@ -1,0 +1,46 @@
+name: Trigger Azure DevOps Pipeline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AZURE_DEVOPS_ORG: SUML-2026
+  AZURE_DEVOPS_PROJECT: SUML
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Azure DevOps pipeline
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+          AZURE_DEVOPS_PIPELINE_ID: ${{ secrets.AZURE_DEVOPS_PIPELINE_ID }}
+          SOURCE_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${AZURE_DEVOPS_PAT}" ]; then
+            echo "Missing GitHub secret: AZURE_DEVOPS_PAT"
+            exit 1
+          fi
+
+          if [ -z "${AZURE_DEVOPS_PIPELINE_ID}" ]; then
+            echo "Missing GitHub secret: AZURE_DEVOPS_PIPELINE_ID"
+            exit 1
+          fi
+
+          auth_header="$(printf ':%s' "${AZURE_DEVOPS_PAT}" | base64 -w 0)"
+          api_url="https://dev.azure.com/${AZURE_DEVOPS_ORG}/${AZURE_DEVOPS_PROJECT}/_apis/pipelines/${AZURE_DEVOPS_PIPELINE_ID}/runs?api-version=7.1"
+
+          payload="$(jq -n --arg branch "refs/heads/${SOURCE_BRANCH}" '{ resources: { repositories: { self: { refName: $branch } } } }')"
+
+          curl --fail-with-body \
+            --request POST \
+            --header "Authorization: Basic ${auth_header}" \
+            --header "Content-Type: application/json" \
+            --data "${payload}" \
+            "${api_url}"
