@@ -14,17 +14,17 @@ def initialize_ollama_models():
     if st.session_state.models_initialized:
         return
         
-    ollama_url = os.environ.get("LLM_URL", "http://localhost:11434")
+    ollama_url = os.environ.get("LLM_URL", "http://localhost:11434").rstrip("/")
     
     for _ in range(6):
         try:
-            res = requests.get(f"{ollama_url}/api/tags")
+            res = requests.get(f"{ollama_url}/api/tags", timeout=10)
             if res.status_code == 200:
                 break
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.RequestException:
             time.sleep(5)
     else:
-        st.error("Unable to reach Ollama container, check network configuration.")
+        st.error(f"Unable to reach Ollama at {ollama_url}, check Container Apps networking and Ollama logs.")
         return
 
     try:
@@ -35,7 +35,8 @@ def initialize_ollama_models():
             model_with_default_tag = model if ":" in model else f"{model}:latest"
             if model not in existing_models and model_with_default_tag not in existing_models:
                 with st.spinner(f"Initializing: Downloading {model}..."):
-                    requests.post(f"{ollama_url}/api/pull", json={"name": model}, timeout=600)
+                    pull_response = requests.post(f"{ollama_url}/api/pull", json={"name": model}, timeout=600)
+                    pull_response.raise_for_status()
         
         st.session_state.models_initialized = True
     except Exception as e:
