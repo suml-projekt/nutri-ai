@@ -55,10 +55,15 @@ def display_detected_items(weights_dict):
 def analyze_image(image_bytes):
     """Analyzes the image by sending it to the Ollama API and returns the raw text response."""
     payload = {
-        "model": "llava",
+        "model": "qwen2.5vl:3b",
         "prompt": get_vision_prompt(),
         "stream": False,
-        "images": [base64.b64encode(image_bytes).decode('utf-8')]
+        "images": [base64.b64encode(image_bytes).decode('utf-8')],
+        "options": {
+            "temperature": 0.1,
+            "num_ctx": 1024,
+            "num_predict": 200
+        }
     }
     response = requests.post(OLLAMA_URL, json=payload)
     response_data = response.json()
@@ -69,9 +74,14 @@ def analyze_image(image_bytes):
 def get_macros(json_data_string):
     """Sends the detected items and their weights to the Ollama API to get back estimated macros, then returns the raw text response."""
     payload = {
-        "model": "llama3",
+        "model": "qwen2.5vl:3b",
         "prompt": get_macro_prompt(json_data_string),
-        "stream": False
+        "stream": False,
+        "options": {
+            "temperature": 0.1,
+            "num_ctx": 2048,
+            "num_predict": 512
+        }
     }
     response = requests.post(OLLAMA_URL, json=payload)
     response_data = response.json()

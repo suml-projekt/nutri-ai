@@ -67,7 +67,7 @@ variable "ollama_image" {
 variable "required_ollama_models" {
   description = "Comma-joined into REQUIRED_MODELS for the Streamlit app to pull on startup."
   type        = list(string)
-  default     = ["llava:latest", "llama3:latest"]
+  default     = ["qwen2.5vl:3b"]
 }
 
 variable "streamlit_image_tag" {
