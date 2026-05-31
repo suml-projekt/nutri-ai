@@ -121,13 +121,13 @@ variable "streamlit_max_replicas" {
 variable "ollama_cpu" {
   description = "CPU cores assigned to Ollama."
   type        = number
-  default     = 4
+  default     = 2
 }
 
 variable "ollama_memory" {
   description = "Memory assigned to Ollama."
   type        = string
-  default     = "8Gi"
+  default     = "4Gi"
 }
 
 variable "ollama_storage_account_name" {
