@@ -5,10 +5,10 @@ output "acr_login_server" {
 
 output "ollama_internal_fqdn" {
   description = "Internal Ollama FQDN inside the Container Apps environment."
-  value       = azurerm_container_app.ollama.latest_revision_fqdn
+  value       = azurerm_container_app.ollama.ingress[0].fqdn
 }
 
 output "streamlit_url" {
   description = "Public Streamlit app URL. Null until deploy_streamlit_app is true."
-  value       = var.deploy_streamlit_app ? "https://${azurerm_container_app.streamlit[0].latest_revision_fqdn}" : null
+  value       = var.deploy_streamlit_app ? "https://${azurerm_container_app.streamlit[0].ingress[0].fqdn}" : null
 }

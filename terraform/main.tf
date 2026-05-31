@@ -182,7 +182,7 @@ resource "azurerm_container_app" "streamlit" {
 
       env {
         name  = "LLM_URL"
-        value = "https://${azurerm_container_app.ollama.latest_revision_fqdn}"
+        value = "http://${azurerm_container_app.ollama.ingress[0].fqdn}"
       }
 
       env {

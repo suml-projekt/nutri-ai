@@ -1,10 +1,21 @@
 name: Trigger Azure DevOps Pipeline
 
 on:
+  push:
+    branches:
+      - main
+      - master
+      - git-ci-cd
+      - fix-delpoy
+      - fix-deploy
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: trigger-azure-pipeline-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   AZURE_DEVOPS_ORG: SUML-2026
