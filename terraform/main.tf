@@ -133,6 +133,21 @@ resource "azurerm_container_app" "ollama" {
         value = "0.0.0.0:${var.ollama_port}"
       }
 
+      env {
+        name  = "OLLAMA_KEEP_ALIVE"
+        value = "0"
+      }
+
+      env {
+        name  = "OLLAMA_MAX_LOADED_MODELS"
+        value = "1"
+      }
+
+      env {
+        name  = "OLLAMA_NUM_PARALLEL"
+        value = "1"
+      }
+
       volume_mounts {
         name = "ollama-data"
         path = "/root/.ollama"

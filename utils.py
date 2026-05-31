@@ -4,7 +4,7 @@ import requests
 import streamlit as st
 
 def get_required_models():
-    models = os.environ.get("REQUIRED_MODELS", "llava:latest,llama3:latest")
+    models = os.environ.get("REQUIRED_MODELS", "qwen2.5vl:3b")
     return [model.strip() for model in models.split(",") if model.strip()]
 
 def initialize_ollama_models():

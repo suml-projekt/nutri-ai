@@ -1,5 +1,7 @@
 # app.py
 import streamlit as st
+import io
+from PIL import Image
 
 from constants import VISION_MESSAGES, MACRO_MESSAGES
 from utils import initialize_ollama_models
@@ -25,7 +27,13 @@ if st.session_state.get("models_initialized", False):
     uploaded_file = st.file_uploader("Upload image", type=["jpg", "png"])
 
     if uploaded_file:
-        img_bytes = uploaded_file.getvalue()
+        img = Image.open(uploaded_file);
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RBG")
+        img.thumbnail((512, 512))
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=85)
+        img_bytes = buffer.getvalue()
         st.image(img_bytes)
 
         if st.button("Analyze"):
